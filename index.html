@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reparaciones</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--tx:#1d1d1b;--mu:#5f5e5a;--bd:#d3d1c7;--ac:#185fa5;--on:#fff;--rd:#a32d2d;--gr:#3b6d11;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1c1a;--card:#2c2c2a;--tx:#f1efe8;--mu:#b4b2a9;--bd:#444441;--ac:#85b7eb;--on:#042c53;--rd:#f09595;--gr:#97c459;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1c1c1a;--card:#2c2c2a;--tx:#f1efe8;--mu:#b4b2a9;--bd:#444441;--ac:#85b7eb;--on:#042c53;--rd:#f09595;--gr:#97c459;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:20px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:560px;margin:0 auto;padding:16px}
+h1{font-size:32px;margin:8px 0 16px;letter-spacing:-.5px;color:var(--ac)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:18px;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.07)}
+label{display:block;font-weight:700;font-size:17px;color:var(--ac);margin:14px 0 4px}
+.f{display:flex;gap:10px;align-items:stretch}
+input,textarea{flex:1;min-width:0;box-sizing:border-box;font:inherit;padding:12px;border:2px solid var(--bd);border-radius:14px;background:var(--bg);color:var(--tx)}
+textarea{min-height:100px}
+button{font:inherit;font-weight:600;border:0;border-radius:16px;padding:16px;width:100%;margin-top:14px;cursor:pointer;background:var(--ac);color:var(--on);box-shadow:0 2px 6px rgba(0,0,0,.15)}
+button.mic{width:64px;margin:0;padding:0;font-size:26px;flex:none}
+button.mic.on{background:var(--rd);color:#fff}
+button.sec{background:transparent;color:var(--ac);border:2px solid var(--ac)}
+.msg{color:var(--mu);font-size:17px;margin-top:10px;min-height:1em}
+.hoy{color:var(--mu);font-size:18px;margin:0 0 4px}
+img.prev{max-width:100%;border-radius:10px;margin-top:10px;display:block}
+.it h3{margin:0;font-size:22px}.it p{margin:4px 0}.it small{color:var(--mu);font-size:17px}
+.pr{color:var(--gr);font-weight:700}
+button.on2{background:var(--rd);color:#fff}
+.tot{font-size:22px;font-weight:700;color:var(--gr);border-top:2px solid var(--bd);padding-top:12px}
+.del{background:transparent;color:var(--rd);border:1px solid var(--rd);padding:10px;font-size:17px}
+.rw{display:flex;gap:8px;align-items:center;border-top:1px solid var(--bd);padding:6px 0;font-size:15px;line-height:1.3}
+.rw .th{width:44px;height:44px;object-fit:cover;border-radius:6px;margin:0;flex:none}
+.rw .tx{flex:1;min-width:0}
+.rw small{display:block;color:var(--mu);font-size:13px}
+.rw .su{font-weight:700;font-size:15px;text-align:right;white-space:nowrap}
+.rw .del{width:34px;margin:0;padding:6px 0;font-size:15px;flex:none}
+</style></head><body><main>
+<h1>🔧 Reparaciones</h1>
+
+<div class="card">
+<label for="piso">Piso</label>
+<div class="f"><input id="piso" placeholder="Ej.: Piso 3B, calle Mayor"><button class="mic" data-t="piso" aria-label="Dictar piso">🎤</button></div>
+
+<label for="desc">Reparación</label>
+<div class="f"><textarea id="desc" placeholder="Ej.: Cambié el grifo de la cocina"></textarea><button class="mic" data-t="desc" aria-label="Dictar reparación">🎤</button></div>
+
+<label for="precio">Precio (€)</label>
+<div class="f"><input id="precio" inputmode="decimal" placeholder="0"><button class="mic" data-t="precio" aria-label="Dictar precio">🎤</button></div>
+
+<label for="fecha">Fecha</label>
+<div class="f"><input id="fecha" type="date"></div>
+
+<button class="sec" id="fotoBtn">📷 Hacer o elegir foto</button>
+<input id="foto" type="file" accept="image/*" hidden>
+<img id="prev" class="prev" alt="" hidden>
+
+<button id="save">✅ Guardar reparación</button>
+<div class="msg" id="msg"></div>
+</div>
+
+<div class="card"><div class="msg" style="margin:0 0 6px;font-size:14px">Listado · a la derecha va la suma</div><div id="list"></div><div class="tot" id="tot"></div>
+<button id="wa">📲 Enviar listado por WhatsApp</button>
+<button class="sec" id="cp">📋 Copiar listado</button>
+<div class="msg" id="m2"></div></div>
+</main>
+<script>
+var KEY='reparaciones_v2',items=[],photo='',rec=null,cur=null;
+try{items=JSON.parse(localStorage.getItem(KEY)||localStorage.getItem('reparaciones_v1')||'[]')}catch(e){}
+function $(i){return document.getElementById(i)}
+function msg(t){$('msg').textContent=t}
+function hoy(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function fmt(f){try{return new Date(f+'T12:00').toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'})}catch(e){return f}}
+function euro(n){return (Math.round(n*100)/100).toLocaleString('es-ES')+' €'}
+$('fecha').value=hoy();
+
+var U={cero:0,un:1,uno:1,una:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10,once:11,doce:12,trece:13,catorce:14,quince:15,dieciseis:16,diecisiete:17,dieciocho:18,diecinueve:19,veinte:20,veintiuno:21,veintidos:22,veintitres:23,veinticuatro:24,veinticinco:25,veintiseis:26,veintisiete:27,veintiocho:28,veintinueve:29,treinta:30,cuarenta:40,cincuenta:50,sesenta:60,setenta:70,ochenta:80,noventa:90,cien:100,ciento:100,doscientos:200,trescientos:300,cuatrocientos:400,quinientos:500,seiscientos:600,setecientos:700,ochocientos:800,novecientos:900};
+function numero(t){
+  var m=t.match(/\d+(?:[.,]\d+)?/);if(m)return m[0].replace(',','.');
+  var w=t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').split(/\s+/),tot=0,c=0,ok=false;
+  w.forEach(function(x){if(x==='mil'){tot+=(c||1)*1000;c=0;ok=true}else if(U.hasOwnProperty(x)){c+=U[x];ok=true}});
+  return ok?String(tot+c):''
+}
+
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function offAll(){document.querySelectorAll('.mic').forEach(function(b){b.classList.remove('on');b.textContent='🎤'})}
+function dictar(btn){
+  var id=btn.getAttribute('data-t');
+  if(!SR){msg('Aquí no se puede dictar. Abre la página en Chrome, o usa el micrófono del teclado.');return}
+  if(rec){var same=cur===id;try{rec.stop()}catch(e){}if(same)return}
+  var f=$(id),base=(id==='desc'&&f.value.trim())?f.value.trim()+' ':'';
+  var r=new SR();r.lang='es-ES';r.interimResults=true;r.continuous=(id==='desc');
+  r.onresult=function(e){var t='';for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;
+    if(id==='precio')f.value=numero(t);else{t=t.trim();f.value=base+(id==='piso'?t.charAt(0).toUpperCase()+t.slice(1):t)}
+    if(id==='desc'){var n='',d=t.match(/(\d+(?:[.,]\d+)?)\s*(?:€|euros?)/i);if(d)n=d[1].replace(',','.');else{var q=t.match(/((?:\S+\s+){0,4})euros?/i);if(q)n=numero(q[1])}if(n)$('precio').value=n}};
+  r.onend=function(){if(rec===r){rec=null;cur=null}offAll();msg('')};
+  r.onerror=function(e){msg(e.error==='not-allowed'?'Falta el permiso del micrófono. Permítelo en el navegador.':'No se pudo escuchar. Prueba otra vez.')};
+  offAll();rec=r;cur=id;btn.classList.add('on');btn.textContent='⏹';msg('Habla ahora…');
+  try{r.start()}catch(e){msg('No se pudo iniciar el micrófono.');offAll()}
+}
+document.querySelectorAll('.mic').forEach(function(b){b.onclick=function(){dictar(b)}});
+
+$('fotoBtn').onclick=function(){$('foto').click()};
+$('foto').onchange=function(){
+  var f=this.files[0];if(!f)return;
+  var r=new FileReader();r.onload=function(){
+    var im=new Image();im.onload=function(){
+      var s=Math.min(1,700/Math.max(im.width,im.height)),c=document.createElement('canvas');
+      c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);
+      c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+      photo=c.toDataURL('image/jpeg',0.6);$('prev').src=photo;$('prev').hidden=false};
+    im.src=r.result};
+  r.readAsDataURL(f)
+};
+
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(items));return true}catch(e){return false}}
+$('save').onclick=function(){
+  var d=$('desc').value.trim();
+  if(!d){msg('Primero cuenta la reparación.');return}
+  var it={id:Date.now(),piso:$('piso').value.trim(),desc:d,precio:parseFloat(($('precio').value||'0').replace(',','.'))||0,fecha:$('fecha').value||hoy(),foto:photo};
+  items.push(it);
+  if(!persist()){it.foto='';if(!persist()){items.pop();msg('No hay espacio. Borra alguna reparación antigua.');return}msg('Guardada, pero sin la foto (no cabía).')}else msg('¡Guardada!');
+  $('piso').value='';$('desc').value='';$('precio').value='';$('fecha').value=hoy();photo='';$('prev').hidden=true;$('foto').value='';render()
+};
+
+function m2(t){$('m2').textContent=t}
+function copiar(t){try{navigator.clipboard.writeText(t).then(function(){m2('Copiado. Pégalo en WhatsApp.')},function(){m2('No se pudo copiar.')})}catch(e){m2('No se pudo copiar.')}}
+function abrirWA(t){var w=null;try{w=window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')}catch(e){}if(!w){copiar(t)}}
+function enviar(t){
+  if(navigator.share){navigator.share({text:t}).catch(function(e){if(!e||e.name!=='AbortError')abrirWA(t)});return}
+  abrirWA(t)
+}
+function txt1(it){return (it.piso||'Sin piso')+' · '+fmtS(it.fecha)+' · '+it.desc+' · '+euro(it.precio)}
+function listaTexto(){var tot=0,l=items.slice().sort(function(a,b){return a.id-b.id}).map(function(it){tot+=it.precio;return fmtS(it.fecha)+' - '+(it.piso||'Sin piso')+' - '+it.desc+' - '+euro(it.precio)+' (suma '+euro(tot)+')'});return 'Reparaciones:\n'+l.join('\n')+'\nTOTAL: '+euro(tot)}
+$('wa').onclick=function(){if(!items.length){m2('Aún no hay nada que enviar.');return}enviar(listaTexto())};
+$('cp').onclick=function(){if(!items.length){m2('Aún no hay nada que copiar.');return}copiar(listaTexto())};
+function fmtS(f){try{return new Date(f+'T12:00').toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'})}catch(e){return f}}
+function render(){
+  var L=$('list');L.innerHTML='';
+  var s=items.slice().sort(function(a,b){return a.id-b.id}),tot=0;
+  s.forEach(function(it){
+    tot+=it.precio;
+    var r=document.createElement('div');r.className='rw';
+    if(it.foto){var i=document.createElement('img');i.className='th';i.src=it.foto;i.alt='Foto';r.appendChild(i)}
+    var x=document.createElement('div');x.className='tx';
+    var a=document.createElement('div'),b=document.createElement('b');b.textContent=it.piso||'Sin piso';a.appendChild(b);
+    var p=document.createElement('span');p.className='pr';p.textContent=' · '+euro(it.precio);a.appendChild(p);x.appendChild(a);
+    var d=document.createElement('small');d.textContent=fmtS(it.fecha)+' · '+it.desc;x.appendChild(d);r.appendChild(x);
+    var su=document.createElement('div');su.className='su';su.textContent=euro(tot);r.appendChild(su);
+    var sd=document.createElement('button');sd.className='del';sd.style.cssText='color:var(--ac);border-color:var(--ac)';sd.textContent='📲';sd.setAttribute('aria-label','Enviar por WhatsApp');sd.onclick=function(){enviar(txt1(it))};r.appendChild(sd);
+    var del=document.createElement('button');del.className='del';del.textContent='✕';del.setAttribute('aria-label','Borrar');
+    del.onclick=function(){if(confirm('¿Borrar esta reparación?')){items=items.filter(function(y){return y.id!==it.id});persist();render()}};
+    r.appendChild(del);L.appendChild(r)});
+  $('tot').textContent=items.length?('Total: '+euro(tot)+' · '+items.length+' reparaciones'):'Aún no hay reparaciones guardadas.'
+}
+render();
+</script></body></html>
